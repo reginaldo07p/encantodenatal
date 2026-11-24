@@ -603,3 +603,36 @@ a { color: inherit; text-decoration: none; }
   .product-price-row strong { font-size: 15px; }
   .cart-line-total { display: none; }
 }
+
+
+/* Checkout Pix — estados de pagamento e QR Code local. */
+.checkout-privacy-note { margin: 13px 0 12px !important; padding: 10px 11px; color: #756c5d !important; background: #f7f3eb; border-left: 2px solid #c6a261; font-size: 9px !important; line-height: 1.55 !important; }
+.checkout-state { display: flex; align-items: flex-start; gap: 9px; padding: 12px; margin-top: 13px; font-size: 10px; line-height: 1.55; }
+.checkout-state > svg { flex: 0 0 auto; margin-top: 1px; }
+.checkout-state > div { display: flex; flex-direction: column; gap: 3px; }
+.checkout-state strong { font-size: 11px; }
+.checkout-state-preview { background: #f7f0df; color: #71582e; border-left: 2px solid #c6a261; }
+.checkout-state-success { background: #edf3e9; color: #395a3f; border-left: 2px solid #78916e; }
+.checkout-state-warning { background: #fff4df; color: #82602b; border-left: 2px solid #d2a04d; }
+.checkout-state-error { background: #fbebea; color: #873e38; border-left: 2px solid #a84942; }
+.checkout-state-error > span { overflow-wrap: anywhere; }
+.checkout-form button:disabled { opacity: .65; cursor: wait; }
+.checkout-field input:disabled { background: #f5f1e9; color: #81796e; }
+.pix-payment-card { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 15px 12px; margin-top: 14px; border: 1px solid #e5ddcf; background: #fffefa; }
+.pix-payment-title { width: 100%; display: flex; align-items: flex-start; gap: 9px; color: var(--pine); }
+.pix-payment-title > svg { flex: 0 0 auto; margin-top: 2px; color: #a88145; }
+.pix-payment-title > div { display: flex; flex-direction: column; gap: 3px; }
+.pix-payment-title strong { font: 600 14px var(--serif); }
+.pix-payment-title span { color: #82796c; font-size: 9px; line-height: 1.5; }
+.pix-qr-image { display: block; width: min(220px, 75vw); aspect-ratio: 1; padding: 8px; border: 1px solid #eee8de; background: #fff; }
+.pix-qr-placeholder { width: 210px; height: 210px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #f7f3eb; color: #8c806e; font-size: 10px; }
+.pix-expires { margin: 0 !important; color: #81796e !important; font-size: 9px !important; }
+.pix-code-label { width: 100%; color: #6f6658; font-size: 9px; font-weight: 700; }
+.pix-code-input { width: 100%; resize: vertical; min-height: 80px; padding: 9px; border: 1px solid #e3dacb; background: #f8f5ef; color: #554d41; font: 9px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+.pix-copy-button { width: 100%; min-height: 40px; gap: 7px; font-size: 10px; }
+.spin-icon { animation: checkout-spin 1s linear infinite; }
+@keyframes checkout-spin { to { transform: rotate(360deg); } }
+@media (max-width: 480px) {
+  .pix-payment-card { padding: 13px 10px; }
+  .pix-qr-image, .pix-qr-placeholder { width: min(195px, 70vw); height: auto; aspect-ratio: 1; }
+}

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { products, type CategoryId, type Product } from './products'
 import { productSpecs } from './productSpecs'
+import CheckoutPanel from './CheckoutPanel'
 
 type CartLine = { product: Product; quantity: number }
 
@@ -66,69 +67,8 @@ function ProductPhoto({ product, compact = false }: { product: Product; compact?
   )
 }
 
-function CheckoutPreview({ cart, itemCount, cartTotal, onBack }: { cart: CartLine[]; itemCount: number; cartTotal: number; onBack: () => void }) {
-  const [reviewed, setReviewed] = useState(false)
-  const shippingCents = getShippingCents(cartTotal)
-  const orderTotalCents = toCents(cartTotal) + shippingCents
-
-  return (
-    <div className="checkout-content">
-      <div className="checkout-intro"><span className="checkout-icon"><ShoppingBag size={22} /></span><span className="demo-tag">PRÉVIA</span></div>
-      <h3>Revise seus dados e o pedido.</h3>
-      <p>Preencha os campos para visualizar o resumo. Este formulário é demonstrativo: não envia nem salva seus dados.</p>
-      <form className="checkout-form" onSubmit={(event) => { event.preventDefault(); setReviewed(true) }} onChange={() => setReviewed(false)}>
-        <section className="checkout-form-section" aria-labelledby="checkout-contact-title">
-          <h4 id="checkout-contact-title">Seus dados</h4>
-          <div className="checkout-field-grid">
-            <label className="checkout-field checkout-field-full">Nome completo<input type="text" autoComplete="name" required /></label>
-            <label className="checkout-field">E-mail<input type="email" autoComplete="email" required /></label>
-            <label className="checkout-field">Telefone<input type="tel" autoComplete="tel" required /></label>
-          </div>
-        </section>
-
-        <section className="checkout-form-section" aria-labelledby="checkout-address-title">
-          <h4 id="checkout-address-title">Endereço de entrega</h4>
-          <div className="checkout-field-grid">
-            <label className="checkout-field">CEP<input type="text" inputMode="numeric" autoComplete="postal-code" placeholder="00000-000" required /></label>
-            <label className="checkout-field">Número<input type="text" required /></label>
-            <label className="checkout-field checkout-field-full">Rua ou avenida<input type="text" autoComplete="address-line1" required /></label>
-            <label className="checkout-field">Complemento<input type="text" autoComplete="address-line2" /></label>
-            <label className="checkout-field">Bairro<input type="text" required /></label>
-            <label className="checkout-field">Cidade<input type="text" autoComplete="address-level2" required /></label>
-            <label className="checkout-field">Estado (UF)<input type="text" autoComplete="address-level1" maxLength={2} placeholder="UF" required /></label>
-          </div>
-        </section>
-
-        <section className="checkout-form-section" aria-labelledby="checkout-services-title">
-          <h4 id="checkout-services-title">Entrega e pagamento</h4>
-          <div className="checkout-service-grid">
-            <div className="checkout-service-card"><span>Frete</span><strong>{shippingCents === 0 ? 'Grátis' : formatCents(shippingCents)}</strong><small>{shippingCents === 0 ? 'Frete grátis para subtotal de produtos a partir de R$ 150,00.' : 'Frete fixo para subtotal de produtos abaixo de R$ 150,00.'}</small></div>
-            <div className="checkout-service-card"><span>Pagamento</span><strong>A configurar</strong><small>Nenhum pagamento será solicitado ou cobrado nesta prévia.</small></div>
-          </div>
-        </section>
-
-        <section className="checkout-form-section" aria-labelledby="checkout-order-title">
-          <h4 id="checkout-order-title">Resumo do pedido</h4>
-          <div className="checkout-order-lines">
-            {cart.map(({ product, quantity }) => (
-              <div className="checkout-order-line" key={product.id}><span>{product.name} <small>× {quantity}</small></span><strong>{formatPrice(product.price * quantity)}</strong></div>
-            ))}
-          </div>
-          <div className="checkout-cost-lines">
-            <div className="checkout-cost-row"><span>Subtotal dos produtos · {itemCount} {itemCount === 1 ? 'item' : 'itens'}</span><strong>{formatPrice(cartTotal)}</strong></div>
-            <div className="checkout-cost-row"><span>Frete</span><strong>{shippingCents === 0 ? 'Grátis' : formatCents(shippingCents)}</strong></div>
-          </div>
-          <div className="checkout-summary"><span>Total do pedido</span><strong>{formatCents(orderTotalCents)}</strong></div>
-          <p className="checkout-shipping-note">{shippingCents === 0 ? 'Você ganhou frete grátis nesta compra.' : `Faltam ${formatCents(FREE_SHIPPING_THRESHOLD_CENTS - toCents(cartTotal))} em produtos para o frete grátis.`}</p>
-        </section>
-
-        <button className="button button-dark checkout-button" type="submit">Pré-visualizar resumo <ArrowRight size={16} /></button>
-      </form>
-      {reviewed && <p className="checkout-reviewed" role="status"><Check size={15} /> Resumo revisado localmente. Nenhum dado foi enviado ou salvo.</p>}
-      <button className="button button-outline checkout-back-button" type="button" onClick={onBack}><ArrowRight className="back-arrow" size={16} /> Voltar à sacola</button>
-      <p className="no-order-note">Esta prévia não envia pedidos nem cobra valores.</p>
-    </div>
-  )
+function CheckoutPreview(props: { cart: CartLine[]; itemCount: number; cartTotal: number; onBack: () => void }) {
+  return <CheckoutPanel {...props} />
 }
 
 function App() {
@@ -364,7 +304,7 @@ function App() {
                 {cart.length ? <div className="cart-lines">{cart.map(({ product, quantity }) => (
                   <div className="cart-line" key={product.id}><div className={`cart-thumb tone-${product.tone}`}><ProductPhoto product={product} compact /></div><div className="cart-line-info"><h3>{product.name}</h3><strong className="cart-unit-price">{formatPrice(product.price)}</strong><div className="quantity-control"><button onClick={() => changeQuantity(product.id, -1)} aria-label={`Diminuir ${product.name}`}><Minus size={13} /></button><span>{quantity}</span><button onClick={() => changeQuantity(product.id, 1)} aria-label={`Aumentar ${product.name}`}><Plus size={13} /></button></div></div><strong className="cart-line-total">{formatPrice(product.price * quantity)}</strong><button className="remove-line" onClick={() => changeQuantity(product.id, -quantity)} aria-label={`Remover ${product.name}`}><X size={16} /></button></div>
                 ))}</div> : <div className="empty-cart"><span className="empty-bag"><ShoppingBag size={28} /></span><h3>Sua sacola está esperando</h3><p>Adicione alguns favoritos para continuar.</p><button className="button button-dark" onClick={closePanel}>Explorar produtos <ArrowRight size={16} /></button></div>}
-                <div className="cart-bottom"><div className="cart-price-lines"><div className="cart-price-row"><span>Subtotal</span><strong>{formatPrice(cartTotal)}</strong></div><div className="cart-price-row"><span>Frete</span><strong>{shippingCents === 0 ? 'Grátis' : formatCents(shippingCents)}</strong></div></div><div className="cart-total-row"><span>Total</span><strong>{formatCents(orderTotalCents)}</strong></div><p className="cart-disclaimer">{shippingCents === 0 ? 'Frete grátis aplicado a partir de R$ 150,00.' : `Frete fixo de R$ 14,90. Faltam ${formatCents(FREE_SHIPPING_THRESHOLD_CENTS - toCents(cartTotal))} para o frete grátis.`} O checkout ainda é demonstrativo.</p><button className="button button-dark checkout-button" disabled={!cart.length} onClick={() => setPanel('checkout')}>Continuar para checkout <ArrowRight size={16} /></button><span className="secure-note"><Check size={13} /> Prévia da loja, sem cobrança ou envio de pedido</span></div>
+                <div className="cart-bottom"><div className="cart-price-lines"><div className="cart-price-row"><span>Subtotal</span><strong>{formatPrice(cartTotal)}</strong></div><div className="cart-price-row"><span>Frete</span><strong>{shippingCents === 0 ? 'Grátis' : formatCents(shippingCents)}</strong></div></div><div className="cart-total-row"><span>Total</span><strong>{formatCents(orderTotalCents)}</strong></div><p className="cart-disclaimer">{shippingCents === 0 ? 'Frete grátis aplicado a partir de R$ 150,00.' : `Frete fixo de R$ 14,90. Faltam ${formatCents(FREE_SHIPPING_THRESHOLD_CENTS - toCents(cartTotal))} para o frete grátis.`} O total é recalculado no servidor antes do Pix.</p><button className="button button-dark checkout-button" disabled={!cart.length} onClick={() => setPanel('checkout')}>Continuar para checkout <ArrowRight size={16} /></button><span className="secure-note"><Check size={13} /> O Pix é gerado somente ao enviar o checkout</span></div>
               </>
             ) : (
               <CheckoutPreview cart={cart} itemCount={itemCount} cartTotal={cartTotal} onBack={() => setPanel('cart')} />
