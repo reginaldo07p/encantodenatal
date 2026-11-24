@@ -189,7 +189,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack }: {
     <div className="checkout-content">
       <div className="checkout-intro"><span className="checkout-icon"><QrCode size={22} /></span><span className="demo-tag">PIX</span></div>
       <h3>Finalize seu pedido com Pix.</h3>
-      <p>O total é recalculado no servidor. A confirmação do pagamento chega diretamente da BearPay.</p>
+      <p>Pague com Pix e acompanhe a confirmação do pedido por aqui.</p>
 
       <form className="checkout-form" onSubmit={submitCheckout} onChange={handleFormChange}>
         <section className="checkout-form-section" aria-labelledby="checkout-contact-title">
@@ -218,7 +218,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack }: {
           <h4 id="checkout-services-title">Entrega e pagamento</h4>
           <div className="checkout-service-grid">
             <div className="checkout-service-card"><span>Frete</span><strong>{totals.shippingCents === 0 ? 'Grátis' : formatCents(totals.shippingCents)}</strong><small>{totals.shippingCents === 0 ? 'Frete grátis para subtotal a partir de R$ 150,00.' : 'Frete fixo para subtotal abaixo de R$ 150,00.'}</small></div>
-            <div className="checkout-service-card"><span>Pagamento</span><strong>Pix · BearPay</strong><small>QR Code e código copia e cola. A Preview não gera cobranças reais.</small></div>
+            <div className="checkout-service-card"><span>Pagamento</span><strong>Pix</strong><small>QR Code e código copia e cola.</small></div>
           </div>
         </section>
 
@@ -237,16 +237,16 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack }: {
           <p className="checkout-shipping-note">{totals.shippingCents === 0 ? 'Você ganhou frete grátis nesta compra.' : `Faltam ${formatCents(Math.max(0, 15_000 - totals.subtotalCents))} em produtos para o frete grátis.`}</p>
         </section>
 
-        <p className="checkout-privacy-note">Seus dados de contato e endereço são usados para processar o pedido, o pagamento e a entrega. Em Preview, os dados são descartados e não são registrados.</p>
+        <p className="checkout-privacy-note">Seus dados de contato e endereço serão usados para processar o pedido, o pagamento e a entrega.</p>
         <button className="button button-dark checkout-button" type="submit" disabled={phase === 'sending' || phase === 'pending' || phase === 'paid'}>
           {phase === 'sending' ? <><LoaderCircle className="spin-icon" size={16} /> Processando com segurança</> : phase === 'pending' ? <><Clock3 size={16} /> {pixCode ? 'Aguardando pagamento' : 'Aguardando confirmação'}</> : phase === 'paid' ? <><CheckCircle2 size={16} /> Pagamento confirmado</> : <>Continuar para pagamento <ArrowRight size={16} /></>}
         </button>
       </form>
 
-      {phase === 'preview' && <div className="checkout-state checkout-state-preview" role="status"><Check size={16} /><div><strong>Simulação de Preview</strong><span>Nenhum pedido foi salvo e nenhuma cobrança Pix real foi criada. Os totais foram recalculados no servidor.</span></div></div>}
+      {phase === 'preview' && <div className="checkout-state checkout-state-preview" role="status"><Check size={16} /><div><strong>Simulação de compra</strong><span>Esta compra é apenas uma simulação. Nenhum pagamento foi iniciado.</span></div></div>}
       {phase === 'pending' && <div className="pix-payment-card" role="status">
-        <div className="pix-payment-title"><Clock3 size={17} /><div><strong>{pixCode ? 'Pix aguardando pagamento' : 'Aguardando confirmação da BearPay'}</strong><span>{pixCode ? 'O status será atualizado automaticamente quando a BearPay confirmar.' : 'A confirmação aparecerá após recebermos o webhook assinado.'}</span></div></div>
-        {!pixCode ? <div className="pix-qr-placeholder"><Clock3 size={24} /><span>Aguardando confirmação assinada da BearPay</span></div> : qrImage ? <img className="pix-qr-image" src={qrImage} alt="QR Code Pix do pedido" /> : <div className="pix-qr-placeholder"><LoaderCircle className="spin-icon" size={24} /><span>Preparando QR Code</span></div>}
+        <div className="pix-payment-title"><Clock3 size={17} /><div><strong>{pixCode ? 'Pix aguardando pagamento' : 'Aguardando confirmação do pagamento'}</strong><span>A confirmação aparecerá aqui assim que o pagamento for aprovado.</span></div></div>
+        {!pixCode ? <div className="pix-qr-placeholder"><Clock3 size={24} /><span>Aguardando a confirmação do pagamento</span></div> : qrImage ? <img className="pix-qr-image" src={qrImage} alt="QR Code Pix do pedido" /> : <div className="pix-qr-placeholder"><LoaderCircle className="spin-icon" size={24} /><span>Preparando QR Code</span></div>}
         {pixCode && expiresAt && <p className="pix-expires">Válido até {new Date(expiresAt).toLocaleString('pt-BR')}</p>}
         {pixCode && <>
           <label className="pix-code-label" htmlFor="pix-copy-code">Pix copia e cola</label>
@@ -254,12 +254,12 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack }: {
           <button className="button button-outline pix-copy-button" type="button" onClick={copyPixCode}>{copied ? <><Check size={15} /> Copiado</> : <><Clipboard size={15} /> Copiar código Pix</>}</button>
         </>}
       </div>}
-      {phase === 'paid' && <div className="checkout-state checkout-state-success" role="status"><CheckCircle2 size={18} /><div><strong>Pagamento confirmado</strong><span>A BearPay confirmou o Pix. O pedido está registrado para preparação e entrega.</span></div></div>}
+      {phase === 'paid' && <div className="checkout-state checkout-state-success" role="status"><CheckCircle2 size={18} /><div><strong>Pagamento confirmado</strong><span>Seu pedido foi registrado para preparação e entrega.</span></div></div>}
       {phase === 'expired' && <div className="checkout-state checkout-state-warning" role="status"><XCircle size={18} /><div><strong>Pix expirado</strong><span>Gere um novo Pix para pagar. O frete e o total serão conferidos novamente.</span></div></div>}
       {phase === 'error' && <div className="checkout-state checkout-state-error" role="alert"><XCircle size={17} /><span>{errorMessage}</span></div>}
 
       <button className="button button-outline checkout-back-button" type="button" onClick={onBack}><ArrowRight className="back-arrow" size={16} /> Voltar à sacola</button>
-      <p className="no-order-note">Não confirme pagamento por comprovante: aguarde sempre a confirmação automática da BearPay.</p>
+      <p className="no-order-note">Após pagar, aguarde a confirmação nesta página. O comprovante sozinho não confirma o pagamento.</p>
     </div>
   )
 }

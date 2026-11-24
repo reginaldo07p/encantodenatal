@@ -203,7 +203,7 @@ function App() {
             <span className="hero-spark hero-spark-one"><Star size={18} fill="currentColor" /></span>
             <span className="hero-spark hero-spark-two"><Sparkles size={22} /></span>
           </div>
-          <div className="hero-bottom-note"><span>40</span> produtos para celebrar <ArrowDown size={14} /></div>
+          <div className="hero-bottom-note"><span>Explore</span> a coleção <ArrowDown size={14} /></div>
         </section>
 
         <section className="category-section section-wrap" id="categorias">
@@ -298,13 +298,13 @@ function App() {
       {panel && (
         <div className="panel-layer" onMouseDown={(event) => { if (event.target === event.currentTarget) closePanel() }}>
           <section className="side-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title">
-            <div className="panel-header"><div><span className="eyebrow small-eyebrow">Encanto de Natal</span><h2 id="panel-title">{panel === 'cart' ? 'Sua sacola' : 'Checkout'}</h2></div><button className="icon-button close-panel" onClick={closePanel} aria-label="Fechar"><X size={21} /></button></div>
+            <div className="panel-header"><div><span className="eyebrow small-eyebrow">Encanto de Natal</span><h2 id="panel-title">{panel === 'cart' ? 'Sua sacola' : 'Finalizar pedido'}</h2></div><button className="icon-button close-panel" onClick={closePanel} aria-label="Fechar"><X size={21} /></button></div>
             {panel === 'cart' ? (
               <>
                 {cart.length ? <div className="cart-lines">{cart.map(({ product, quantity }) => (
                   <div className="cart-line" key={product.id}><div className={`cart-thumb tone-${product.tone}`}><ProductPhoto product={product} compact /></div><div className="cart-line-info"><h3>{product.name}</h3><strong className="cart-unit-price">{formatPrice(product.price)}</strong><div className="quantity-control"><button onClick={() => changeQuantity(product.id, -1)} aria-label={`Diminuir ${product.name}`}><Minus size={13} /></button><span>{quantity}</span><button onClick={() => changeQuantity(product.id, 1)} aria-label={`Aumentar ${product.name}`}><Plus size={13} /></button></div></div><strong className="cart-line-total">{formatPrice(product.price * quantity)}</strong><button className="remove-line" onClick={() => changeQuantity(product.id, -quantity)} aria-label={`Remover ${product.name}`}><X size={16} /></button></div>
                 ))}</div> : <div className="empty-cart"><span className="empty-bag"><ShoppingBag size={28} /></span><h3>Sua sacola está esperando</h3><p>Adicione alguns favoritos para continuar.</p><button className="button button-dark" onClick={closePanel}>Explorar produtos <ArrowRight size={16} /></button></div>}
-                <div className="cart-bottom"><div className="cart-price-lines"><div className="cart-price-row"><span>Subtotal</span><strong>{formatPrice(cartTotal)}</strong></div><div className="cart-price-row"><span>Frete</span><strong>{shippingCents === 0 ? 'Grátis' : formatCents(shippingCents)}</strong></div></div><div className="cart-total-row"><span>Total</span><strong>{formatCents(orderTotalCents)}</strong></div><p className="cart-disclaimer">{shippingCents === 0 ? 'Frete grátis aplicado a partir de R$ 150,00.' : `Frete fixo de R$ 14,90. Faltam ${formatCents(FREE_SHIPPING_THRESHOLD_CENTS - toCents(cartTotal))} para o frete grátis.`} O total é recalculado no servidor antes do Pix.</p><button className="button button-dark checkout-button" disabled={!cart.length} onClick={() => setPanel('checkout')}>Continuar para checkout <ArrowRight size={16} /></button><span className="secure-note"><Check size={13} /> O Pix é gerado somente ao enviar o checkout</span></div>
+                <div className="cart-bottom"><div className="cart-price-lines"><div className="cart-price-row"><span>Subtotal</span><strong>{formatPrice(cartTotal)}</strong></div><div className="cart-price-row"><span>Frete</span><strong>{shippingCents === 0 ? 'Grátis' : formatCents(shippingCents)}</strong></div></div><div className="cart-total-row"><span>Total</span><strong>{formatCents(orderTotalCents)}</strong></div><p className="cart-disclaimer">{shippingCents === 0 ? 'Frete grátis aplicado a partir de R$ 150,00.' : `Frete fixo de R$ 14,90. Faltam ${formatCents(FREE_SHIPPING_THRESHOLD_CENTS - toCents(cartTotal))} para o frete grátis.`} Confira o valor final antes de pagar.</p><button className="button button-dark checkout-button" disabled={!cart.length} onClick={() => setPanel('checkout')}>Continuar para pagamento <ArrowRight size={16} /></button><span className="secure-note"><Check size={13} /> O Pix é gerado ao confirmar o pedido</span></div>
               </>
             ) : (
               <CheckoutPreview cart={cart} itemCount={itemCount} cartTotal={cartTotal} onBack={() => setPanel('cart')} />

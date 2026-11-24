@@ -54,7 +54,7 @@ const productById = new Map(products.map((product) => [product.id, product]))
 
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new CheckoutInputError('Confira os dados do checkout e tente novamente.')
+    throw new CheckoutInputError('Confira os dados do pedido e tente novamente.')
   }
   return value as Record<string, unknown>
 }

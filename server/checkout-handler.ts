@@ -35,11 +35,11 @@ function sameOrigin(request: Request): boolean {
 
 async function readJson(request: Request): Promise<unknown> {
   const bytes = new Uint8Array(await request.arrayBuffer())
-  if (bytes.byteLength > MAX_BODY_BYTES) throw new CheckoutInputError('O formulário excede o tamanho permitido.', 'body_too_large')
+  if (bytes.byteLength > MAX_BODY_BYTES) throw new CheckoutInputError('Revise os dados preenchidos e tente novamente.', 'body_too_large')
   try {
     return JSON.parse(new TextDecoder().decode(bytes)) as unknown
   } catch {
-    throw new CheckoutInputError('Não foi possível ler os dados do checkout.', 'invalid_json')
+    throw new CheckoutInputError('Não foi possível processar seus dados. Confira as informações e tente novamente.', 'invalid_json')
   }
 }
 
@@ -79,12 +79,12 @@ async function createOrder(value: unknown): Promise<Response> {
       subtotalCents: quote.subtotalCents,
       shippingCents: quote.shippingCents,
       totalCents: quote.totalCents,
-      message: 'Simulação: nenhum pedido foi salvo e nenhuma cobrança Pix foi criada.',
+      message: 'Esta compra é apenas uma simulação. Nenhum pagamento foi iniciado.',
     })
   }
 
   if (!configReadyForOrders()) {
-    return json(503, { error: 'O Pix ainda está sendo configurado. Nenhum pedido foi enviado.' })
+    return json(503, { error: 'Não foi possível iniciar o pagamento agora. Tente novamente em alguns instantes.' })
   }
 
   const fingerprintPayload = JSON.stringify({
@@ -116,7 +116,7 @@ async function createOrder(value: unknown): Promise<Response> {
   })
 
   if (order.request_fingerprint !== fingerprint) {
-    return json(409, { error: 'Este checkout mudou. Atualize o pedido antes de tentar novamente.' })
+    return json(409, { error: 'Os dados do pedido foram alterados. Revise as informações e tente novamente.' })
   }
   if (order.payment_status === 'paid') return json(200, publicOrder(order, 'live'))
 
@@ -153,9 +153,9 @@ async function createOrder(value: unknown): Promise<Response> {
     return json(200, publicOrder(updated, 'live'))
   } catch (error) {
     if (error instanceof SupabaseRequestError) {
-      return json(503, { error: 'Não foi possível salvar o pedido. Tente novamente; o identificador evita cobranças duplicadas.' })
+      return json(503, { error: 'Não foi possível confirmar seu pedido agora. Tente novamente em instantes.' })
     }
-    return json(502, { error: 'Não foi possível gerar o Pix agora. Tente novamente em instantes; não envie o formulário várias vezes.' })
+    return json(502, { error: 'Não foi possível gerar seu Pix agora. Tente novamente em instantes.' })
   }
 }
 
@@ -180,9 +180,9 @@ export async function handleCheckout(request: Request): Promise<Response> {
       return json(status, { error: error.message, code: error.code })
     }
     if (error instanceof SupabaseRequestError) {
-      return json(503, { error: 'O serviço de pedidos está temporariamente indisponível.' })
+      return json(503, { error: 'Não foi possível consultar seu pedido agora. Tente novamente em instantes.' })
     }
-    return json(500, { error: 'Não foi possível concluir o checkout. Tente novamente.' })
+    return json(500, { error: 'Não foi possível concluir seu pedido. Tente novamente.' })
   }
 }
 
