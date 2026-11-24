@@ -29,11 +29,12 @@ function safeErrorMessage(value: unknown): string {
   return 'Não foi possível continuar agora. Confira sua conexão e tente novamente.'
 }
 
-export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack }: {
+export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPaid }: {
   cart: CartLine[]
   itemCount: number
   cartTotal: number
   onBack: () => void
+  onPaid: (totalCents: number) => void
 }) {
   const localSubtotal = Math.round(cartTotal * 100)
   const localShipping = shippingFor(localSubtotal)
@@ -77,7 +78,10 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack }: {
         if (!response.ok) return
         const result = await response.json() as CheckoutResponse
         if (!active) return
-        if (result.paymentStatus === 'paid') setPhase('paid')
+        if (result.paymentStatus === 'paid') {
+          setPhase('paid')
+          onPaid(result.totalCents ?? localTotals.totalCents)
+        }
         if (result.paymentStatus === 'expired') setPhase('expired')
       } catch {
         // A temporary status-check failure must not lose the Pix code already shown.
@@ -86,7 +90,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack }: {
     void checkStatus()
     const timer = window.setInterval(checkStatus, 5_000)
     return () => { active = false; window.clearInterval(timer) }
-  }, [phase, checkoutKey])
+  }, [phase, checkoutKey, onPaid, localTotals.totalCents])
 
   function handleFormChange() {
     if (phase === 'sending' || phase === 'pending' || phase === 'paid') return
@@ -158,6 +162,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack }: {
       } else if (result?.paymentStatus === 'paid') {
         setPixCode('')
         setPhase('paid')
+        onPaid(result.totalCents ?? totals.totalCents)
       } else if (result?.paymentStatus === 'expired') {
         setPixCode('')
         setPhase('expired')

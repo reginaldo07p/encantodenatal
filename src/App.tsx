@@ -4,6 +4,7 @@ import {
   ArrowDown,
   ArrowRight,
   Check,
+  CheckCircle2,
   ChevronRight,
   Circle,
   Gift,
@@ -67,8 +68,38 @@ function ProductPhoto({ product, compact = false }: { product: Product; compact?
   )
 }
 
-function CheckoutPreview(props: { cart: CartLine[]; itemCount: number; cartTotal: number; onBack: () => void }) {
+function CheckoutPreview(props: { cart: CartLine[]; itemCount: number; cartTotal: number; onBack: () => void; onPaid: (totalCents: number) => void }) {
   return <CheckoutPanel {...props} />
+}
+
+function ThankYouPage({ totalCents, onContinueShopping }: { totalCents: number; onContinueShopping: () => void }) {
+  return (
+    <div className="thank-you-page">
+      <header className="thank-you-header">
+        <div className="brand">
+          <BrandMark />
+          <span className="brand-copy"><strong>Estação <em>de</em> Natal</strong><small>A magia mora nos detalhes</small></span>
+        </div>
+      </header>
+      <main className="thank-you-main">
+        <section className="thank-you-card" aria-labelledby="thank-you-title">
+          <span className="thank-you-check"><CheckCircle2 size={34} /></span>
+          <span className="eyebrow small-eyebrow">Pagamento confirmado</span>
+          <h1 id="thank-you-title">Obrigado pelo seu pedido!</h1>
+          <p>Seu pedido está confirmado e seguirá para preparação.</p>
+          <div className="thank-you-total">
+            <span>Total do pedido</span>
+            <strong>{formatCents(totalCents)}</strong>
+          </div>
+          <p className="thank-you-message"><Sparkles size={15} /> Que a magia do Natal chegue até você.</p>
+          <button className="button button-dark thank-you-button" onClick={onContinueShopping}>
+            Continuar comprando <ArrowRight size={16} />
+          </button>
+        </section>
+      </main>
+      <footer className="thank-you-footer">Estação de Natal <span>·</span> A magia mora nos detalhes</footer>
+    </div>
+  )
 }
 
 function App() {
@@ -80,6 +111,7 @@ function App() {
   const [panel, setPanel] = useState<'cart' | 'checkout' | null>(null)
   const [toast, setToast] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [paidOrderTotalCents, setPaidOrderTotalCents] = useState<number | null>(null)
 
   const visibleProducts = useMemo(() => products.filter((product) => {
     const matchesCategory = activeCategory === 'all' || product.category === activeCategory
@@ -132,6 +164,22 @@ function App() {
 
   function closePanel() {
     setPanel(null)
+  }
+
+  if (paidOrderTotalCents !== null) {
+    return (
+      <ThankYouPage
+        totalCents={paidOrderTotalCents}
+        onContinueShopping={() => {
+          setPaidOrderTotalCents(null)
+          setCart([])
+          setPanel(null)
+          setSelectedProduct(null)
+          setToast('')
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+      />
+    )
   }
 
   return (
@@ -307,7 +355,7 @@ function App() {
                 <div className="cart-bottom"><div className="cart-price-lines"><div className="cart-price-row"><span>Subtotal</span><strong>{formatPrice(cartTotal)}</strong></div><div className="cart-price-row"><span>Frete</span><strong>{shippingCents === 0 ? 'Grátis' : formatCents(shippingCents)}</strong></div></div><div className="cart-total-row"><span>Total</span><strong>{formatCents(orderTotalCents)}</strong></div><p className="cart-disclaimer">{shippingCents === 0 ? 'Frete grátis aplicado a partir de R$ 150,00.' : `Frete fixo de R$ 14,90. Faltam ${formatCents(FREE_SHIPPING_THRESHOLD_CENTS - toCents(cartTotal))} para o frete grátis.`} Confira o valor final antes de pagar.</p><button className="button button-dark checkout-button" disabled={!cart.length} onClick={() => setPanel('checkout')}>Continuar para pagamento <ArrowRight size={16} /></button><span className="secure-note"><Check size={13} /> O Pix é gerado ao confirmar o pedido</span></div>
               </>
             ) : (
-              <CheckoutPreview cart={cart} itemCount={itemCount} cartTotal={cartTotal} onBack={() => setPanel('cart')} />
+              <CheckoutPreview cart={cart} itemCount={itemCount} cartTotal={cartTotal} onBack={() => setPanel('cart')} onPaid={setPaidOrderTotalCents} />
             )}
           </section>
         </div>
