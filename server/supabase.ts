@@ -1,5 +1,5 @@
-import { env } from './env'
-import type { CheckoutCustomer, CheckoutLine, ShippingAddress } from './checkout-core'
+import { env } from './env.js'
+import type { CheckoutCustomer, CheckoutLine, ShippingAddress } from './checkout-core.js'
 
 export type PaymentStatus = 'creating' | 'pending' | 'paid' | 'expired' | 'failed'
 

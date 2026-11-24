@@ -1,4 +1,4 @@
-import { handleCheckout } from '../server/checkout-handler'
+import { handleCheckout } from '../server/checkout-handler.js'
 
 export default {
   fetch(request: Request): Promise<Response> {

@@ -1,4 +1,4 @@
-import { products } from '../src/products'
+import { products } from '../src/products.js'
 
 export const FREE_SHIPPING_THRESHOLD_CENTS = 15_000
 export const FIXED_SHIPPING_CENTS = 1_490

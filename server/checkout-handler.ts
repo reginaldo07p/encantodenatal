@@ -1,18 +1,18 @@
-import { env, hasBearPayCheckoutConfig, hasSupabaseConfig, isProduction } from './env'
+import { env, hasBearPayCheckoutConfig, hasSupabaseConfig, isProduction } from './env.js'
 import {
   calculateQuote,
   CheckoutInputError,
   parseCheckoutInput,
   parseStatusKey,
-} from './checkout-core'
-import { createPixCharge } from './bearpay'
+} from './checkout-core.js'
+import { createPixCharge } from './bearpay.js'
 import {
   createOrGetOrder,
   findOrderByIdempotencyKey,
   type OrderRecord,
   SupabaseRequestError,
   updateOrderById,
-} from './supabase'
+} from './supabase.js'
 
 const MAX_BODY_BYTES = 24_000
 

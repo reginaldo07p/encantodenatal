@@ -1,5 +1,5 @@
-import { env, isProduction } from './env'
-import { findOrderByExternalId, recordBearPayEvent, SupabaseRequestError, updateOrderById } from './supabase'
+import { env, isProduction } from './env.js'
+import { findOrderByExternalId, recordBearPayEvent, SupabaseRequestError, updateOrderById } from './supabase.js'
 
 const MAX_WEBHOOK_BYTES = 96_000
 
