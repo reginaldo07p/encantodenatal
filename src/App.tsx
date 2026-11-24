@@ -146,9 +146,9 @@ function App() {
         <button className="mobile-menu icon-button" aria-label="Abrir menu" onClick={() => document.getElementById('categorias')?.scrollIntoView({ behavior: 'smooth' })}>
           <Menu size={21} />
         </button>
-        <a className="brand" href="#inicio" aria-label="Encanto de Natal — início">
+        <a className="brand" href="#inicio" aria-label="Estação de Natal — início">
           <BrandMark />
-          <span className="brand-copy"><strong>Encanto <em>de</em> Natal</strong><small>A magia mora nos detalhes</small></span>
+          <span className="brand-copy"><strong>Estação <em>de</em> Natal</strong><small>A magia mora nos detalhes</small></span>
         </a>
         <nav className="desktop-nav" aria-label="Navegação principal">
           <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Início</button>
@@ -266,7 +266,7 @@ function App() {
         <section className="closing-note section-wrap"><span className="closing-star"><Star size={15} fill="currentColor" /></span><p>Que a sua casa se encha de luz,<br /><em>e o coração, de boas lembranças.</em></p><span className="closing-star"><Star size={15} fill="currentColor" /></span></section>
       </main>
 
-      <footer className="site-footer"><a className="footer-brand" href="#inicio"><BrandMark /><span>Encanto de Natal</span></a><span className="footer-copy">A magia mora nos detalhes.</span><span className="footer-demo">Black Friday · Queima de estoque</span></footer>
+      <footer className="site-footer"><a className="footer-brand" href="#inicio"><BrandMark /><span>Estação de Natal</span></a><span className="footer-copy">A magia mora nos detalhes.</span><span className="footer-demo">Black Friday · Queima de estoque</span></footer>
 
       {selectedProduct && (
         <div className="product-detail-backdrop" onClick={(event) => { if (event.target === event.currentTarget) setSelectedProduct(null) }}>
@@ -298,7 +298,7 @@ function App() {
       {panel && (
         <div className="panel-layer" onMouseDown={(event) => { if (event.target === event.currentTarget) closePanel() }}>
           <section className="side-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title">
-            <div className="panel-header"><div><span className="eyebrow small-eyebrow">Encanto de Natal</span><h2 id="panel-title">{panel === 'cart' ? 'Sua sacola' : 'Finalizar pedido'}</h2></div><button className="icon-button close-panel" onClick={closePanel} aria-label="Fechar"><X size={21} /></button></div>
+            <div className="panel-header"><div><span className="eyebrow small-eyebrow">Estação de Natal</span><h2 id="panel-title">{panel === 'cart' ? 'Sua sacola' : 'Finalizar pedido'}</h2></div><button className="icon-button close-panel" onClick={closePanel} aria-label="Fechar"><X size={21} /></button></div>
             {panel === 'cart' ? (
               <>
                 {cart.length ? <div className="cart-lines">{cart.map(({ product, quantity }) => (

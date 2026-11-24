@@ -39,7 +39,7 @@ export async function createPixCharge(input: {
     body: JSON.stringify({
       amount: input.amountCents / 100,
       method: 'pix',
-      description: `Encanto de Natal - Pedido ${input.orderId.slice(0, 8)}`,
+      description: `Estação de Natal - Pedido ${input.orderId.slice(0, 8)}`,
       external_id: input.externalId,
       customer: input.customer,
       metadata: { order_id: input.orderId },
