@@ -18,6 +18,13 @@ type BearPayEvent = {
   }
 }
 
+type BearPayEventEnvelope = {
+  id: string
+  event: string
+  test?: unknown
+  data: Record<string, unknown>
+}
+
 function json(status: number, payload: Record<string, unknown>): Response {
   return Response.json(payload, {
     status,
@@ -53,16 +60,19 @@ async function validSignature(secret: string, body: Uint8Array, supplied: string
   return constantTimeEqual(expected, supplied)
 }
 
-function isEvent(value: unknown): value is BearPayEvent {
+function isEventEnvelope(value: unknown): value is BearPayEventEnvelope {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const event = value as Record<string, unknown>
-  if (typeof event.id !== 'string' || typeof event.event !== 'string' || !event.data || typeof event.data !== 'object') return false
+  if (typeof event.id !== 'string' || !event.id || typeof event.event !== 'string' || !event.event || !event.data || typeof event.data !== 'object' || Array.isArray(event.data)) return false
   const data = event.data as Record<string, unknown>
-  return typeof data.id === 'string'
-    && typeof data.status === 'string'
-    && typeof data.amount === 'number'
-    && Number.isFinite(data.amount)
-    && typeof data.external_id === 'string'
+  return typeof data.id === 'string' && Boolean(data.id)
+}
+
+function isCompleteEvent(event: BearPayEventEnvelope): event is BearPayEvent {
+  return typeof event.data.status === 'string'
+    && typeof event.data.amount === 'number'
+    && Number.isFinite(event.data.amount)
+    && typeof event.data.external_id === 'string'
 }
 
 export async function handleBearPayWebhook(request: Request): Promise<Response> {
@@ -84,12 +94,14 @@ export async function handleBearPayWebhook(request: Request): Promise<Response> 
   } catch {
     return json(400, { error: 'Invalid JSON' })
   }
-  if (!isEvent(parsed)) return json(400, { error: 'Invalid event payload' })
-  const event = parsed
-  if (request.headers.get('x-bearpay-event') !== event.event) return json(400, { error: 'Event header mismatch' })
+  if (!isEventEnvelope(parsed)) return json(400, { error: 'Invalid event payload' })
+  if (request.headers.get('x-bearpay-event') !== parsed.event) return json(400, { error: 'Event header mismatch' })
 
-  const isTestEvent = event.test === true || event.data.test === true || event.data.id === 'ch_teste'
+  const isTestEvent = parsed.test === true || parsed.data.test === true || parsed.data.id === 'ch_teste'
   if (isTestEvent) return json(200, { ok: true, test: true, ignored: true })
+
+  if (!isCompleteEvent(parsed)) return json(400, { error: 'Invalid event payload' })
+  const event = parsed
 
   // Preview shares the official Supabase project, so it must never write webhook events or orders.
   if (!isProduction()) return json(200, { ok: true, ignored: true })
