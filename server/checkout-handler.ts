@@ -96,12 +96,14 @@ async function createOrder(value: unknown): Promise<Response> {
     totalCents: quote.totalCents,
   })
   const fingerprint = await sha256Hex(fingerprintPayload)
+  const trackingTokenHash = await sha256Hex(input.trackingToken)
   const newId = crypto.randomUUID()
   const now = new Date().toISOString()
   const order = await createOrGetOrder({
     id: newId,
     idempotency_key: input.idempotencyKey,
     request_fingerprint: fingerprint,
+    tracking_token_hash: trackingTokenHash,
     external_id: `encanto-${newId}`,
     subtotal_cents: quote.subtotalCents,
     shipping_cents: quote.shippingCents,
@@ -117,6 +119,9 @@ async function createOrder(value: unknown): Promise<Response> {
 
   if (order.request_fingerprint !== fingerprint) {
     return json(409, { error: 'Os dados do pedido foram alterados. Revise as informações e tente novamente.' })
+  }
+  if (order.tracking_token_hash !== trackingTokenHash) {
+    return json(409, { error: 'O código de acompanhamento não corresponde a este pedido. Atualize a página e tente novamente.' })
   }
   if (order.payment_status === 'paid') return json(200, publicOrder(order, 'live'))
 

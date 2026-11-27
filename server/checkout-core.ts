@@ -36,6 +36,7 @@ export type CheckoutLine = {
 
 export type CheckoutInput = {
   idempotencyKey: string
+  trackingToken: string
   lines: Array<{ productId: string; quantity: number }>
   customer: CheckoutCustomer
   address: ShippingAddress
@@ -77,6 +78,10 @@ export function parseCheckoutInput(value: unknown): CheckoutInput {
   const idempotencyKey = text(body.idempotencyKey, 'identificador do pedido', 36, 36)
   if (!UUID_PATTERN.test(idempotencyKey)) {
     throw new CheckoutInputError('Atualize a página e tente novamente.', 'invalid_idempotency_key')
+  }
+  const trackingToken = text(body.trackingToken, 'código de acompanhamento', 36, 36)
+  if (!UUID_PATTERN.test(trackingToken)) {
+    throw new CheckoutInputError('Não foi possível criar o código de acompanhamento. Atualize a página e tente novamente.', 'invalid_tracking_token')
   }
 
   if (!Array.isArray(body.items) || body.items.length < 1 || body.items.length > 40) {
@@ -125,7 +130,7 @@ export function parseCheckoutInput(value: unknown): CheckoutInput {
     state,
   }
 
-  return { idempotencyKey, lines, customer: { name, email, phone }, address }
+  return { idempotencyKey, trackingToken, lines, customer: { name, email, phone }, address }
 }
 
 export function parseStatusKey(value: unknown): string {

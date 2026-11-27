@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Check, CheckCircle2, Clipboard, Clock3, LoaderCircle, QrCode, XCircle } from 'lucide-react'
 import { toDataURL } from 'qrcode'
 import type { Product } from './products'
+import { rememberTrackingToken } from './orderTracking'
 
 type CartLine = { product: Product; quantity: number }
 type CheckoutPhase = 'form' | 'sending' | 'preview' | 'pending' | 'paid' | 'expired' | 'error'
@@ -34,7 +35,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPa
   itemCount: number
   cartTotal: number
   onBack: () => void
-  onPaid: (totalCents: number) => void
+  onPaid: (totalCents: number, trackingToken: string) => void
 }) {
   const localSubtotal = Math.round(cartTotal * 100)
   const localShipping = shippingFor(localSubtotal)
@@ -49,6 +50,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPa
   const [copied, setCopied] = useState(false)
   const keyRef = useRef('')
   const fingerprintRef = useRef('')
+  const trackingTokenRef = useRef('')
   const locked = phase === 'pending' || phase === 'paid'
   const totals = serverTotals ?? localTotals
 
@@ -80,7 +82,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPa
         if (!active) return
         if (result.paymentStatus === 'paid') {
           setPhase('paid')
-          onPaid(result.totalCents ?? localTotals.totalCents)
+          onPaid(result.totalCents ?? localTotals.totalCents, trackingTokenRef.current)
         }
         if (result.paymentStatus === 'expired') setPhase('expired')
       } catch {
@@ -102,6 +104,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPa
     setCopied(false)
     keyRef.current = ''
     fingerprintRef.current = ''
+    trackingTokenRef.current = ''
     setCheckoutKey('')
   }
 
@@ -110,6 +113,8 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPa
     if (phase === 'sending' || phase === 'pending' || phase === 'paid') return
 
     const formData = new FormData(event.currentTarget)
+    if (!trackingTokenRef.current) trackingTokenRef.current = crypto.randomUUID()
+    const trackingToken = trackingTokenRef.current
     const payload = {
       items: cart.map(({ product, quantity }) => ({ productId: product.id, quantity })),
       customer: {
@@ -141,11 +146,12 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPa
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, idempotencyKey: keyRef.current }),
+        body: JSON.stringify({ ...payload, idempotencyKey: keyRef.current, trackingToken }),
         cache: 'no-store',
       })
       const result = await response.json().catch(() => null) as CheckoutResponse | null
       if (!response.ok) throw new Error(safeErrorMessage(result))
+      if (result?.mode === 'live') rememberTrackingToken(trackingToken)
       if (typeof result?.subtotalCents === 'number'
         && typeof result.shippingCents === 'number'
         && typeof result.totalCents === 'number') {
@@ -162,7 +168,7 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPa
       } else if (result?.paymentStatus === 'paid') {
         setPixCode('')
         setPhase('paid')
-        onPaid(result.totalCents ?? totals.totalCents)
+        onPaid(result.totalCents ?? totals.totalCents, trackingToken)
       } else if (result?.paymentStatus === 'expired') {
         setPixCode('')
         setPhase('expired')

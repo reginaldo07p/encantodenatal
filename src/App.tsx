@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowDown,
@@ -7,12 +7,14 @@ import {
   CheckCircle2,
   ChevronRight,
   Circle,
+  Clipboard,
   Gift,
   Heart,
   Image as ImageIcon,
   Lightbulb,
   Menu,
   Minus,
+  PackageCheck,
   Plus,
   Search,
   ShoppingBag,
@@ -24,6 +26,8 @@ import {
 import { products, type CategoryId, type Product } from './products'
 import { productSpecs } from './productSpecs'
 import CheckoutPanel from './CheckoutPanel'
+import OrderTrackingPage from './OrderTrackingPage'
+import { rememberTrackingToken } from './orderTracking'
 
 type CartLine = { product: Product; quantity: number }
 
@@ -68,11 +72,23 @@ function ProductPhoto({ product, compact = false }: { product: Product; compact?
   )
 }
 
-function CheckoutPreview(props: { cart: CartLine[]; itemCount: number; cartTotal: number; onBack: () => void; onPaid: (totalCents: number) => void }) {
+function CheckoutPreview(props: { cart: CartLine[]; itemCount: number; cartTotal: number; onBack: () => void; onPaid: (totalCents: number, trackingToken: string) => void }) {
   return <CheckoutPanel {...props} />
 }
 
-function ThankYouPage({ totalCents, onContinueShopping }: { totalCents: number; onContinueShopping: () => void }) {
+function ThankYouPage({ totalCents, trackingToken, onContinueShopping, onTrackOrder }: { totalCents: number; trackingToken: string; onContinueShopping: () => void; onTrackOrder: (token: string) => void }) {
+  const [copied, setCopied] = useState(false)
+
+  async function copyTrackingCode() {
+    try {
+      await navigator.clipboard.writeText(trackingToken)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2200)
+    } catch {
+      setCopied(false)
+    }
+  }
+
   return (
     <div className="thank-you-page">
       <header className="thank-you-header">
@@ -91,7 +107,15 @@ function ThankYouPage({ totalCents, onContinueShopping }: { totalCents: number; 
             <span>Total do pedido</span>
             <strong>{formatCents(totalCents)}</strong>
           </div>
+          <div className="thank-you-tracking-code">
+            <span>Código para acompanhar este pedido</span>
+            <code>{trackingToken}</code>
+            <button className="button button-outline thank-you-copy-button" type="button" onClick={() => void copyTrackingCode()}>{copied ? <Check size={14} /> : <Clipboard size={14} />}{copied ? 'Código copiado' : 'Copiar código'}</button>
+          </div>
           <p className="thank-you-message"><Sparkles size={15} /> Que a magia do Natal chegue até você.</p>
+          <button className="button button-outline thank-you-track-button" onClick={() => onTrackOrder(trackingToken)}>
+            <PackageCheck size={16} /> Acompanhar pedido
+          </button>
           <button className="button button-dark thank-you-button" onClick={onContinueShopping}>
             Continuar comprando <ArrowRight size={16} />
           </button>
@@ -112,6 +136,9 @@ function App() {
   const [toast, setToast] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [paidOrderTotalCents, setPaidOrderTotalCents] = useState<number | null>(null)
+  const [paidOrderTrackingToken, setPaidOrderTrackingToken] = useState('')
+  const [showOrderTracking, setShowOrderTracking] = useState(() => new URLSearchParams(window.location.search).has('acompanhar'))
+  const [activeTrackingToken, setActiveTrackingToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('acompanhar'))
 
   const visibleProducts = useMemo(() => products.filter((product) => {
     const matchesCategory = activeCategory === 'all' || product.category === activeCategory
@@ -137,6 +164,33 @@ function App() {
     window.addEventListener('keydown', handleEscape)
     return () => window.removeEventListener('keydown', handleEscape)
   }, [selectedProduct])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has('acompanhar')) return
+    const token = url.searchParams.get('acompanhar')
+    if (token) rememberTrackingToken(token)
+    url.searchParams.delete('acompanhar')
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
+  }, [])
+
+  const handlePaymentPaid = useCallback((totalCents: number, trackingToken: string) => {
+    setPaidOrderTotalCents(totalCents)
+    setPaidOrderTrackingToken(trackingToken)
+  }, [])
+
+  function openOrderTracking(token?: string | null) {
+    setPaidOrderTotalCents(null)
+    setActiveTrackingToken(token ?? null)
+    setShowOrderTracking(true)
+    setPanel(null)
+  }
+
+  function closeOrderTracking() {
+    setShowOrderTracking(false)
+    setActiveTrackingToken(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   function selectCategory(category: CategoryId) {
     setActiveCategory(category)
@@ -166,12 +220,19 @@ function App() {
     setPanel(null)
   }
 
+  if (showOrderTracking) {
+    return <OrderTrackingPage initialToken={activeTrackingToken} onBack={closeOrderTracking} />
+  }
+
   if (paidOrderTotalCents !== null) {
     return (
       <ThankYouPage
         totalCents={paidOrderTotalCents}
+        trackingToken={paidOrderTrackingToken}
+        onTrackOrder={(token) => openOrderTracking(token)}
         onContinueShopping={() => {
           setPaidOrderTotalCents(null)
+          setPaidOrderTrackingToken('')
           setCart([])
           setPanel(null)
           setSelectedProduct(null)
@@ -204,6 +265,7 @@ function App() {
           <button onClick={() => selectCategory('ornaments')}>Enfeites</button>
           <button onClick={() => selectCategory('frames')}>Personalizados</button>
           <button onClick={() => selectCategory('gifts')}>Presentes</button>
+          <button onClick={() => openOrderTracking()}>Acompanhar pedido</button>
         </nav>
         <div className="header-actions">
           <div className={`header-search ${searchOpen ? 'search-open' : ''}`}>
@@ -314,7 +376,7 @@ function App() {
         <section className="closing-note section-wrap"><span className="closing-star"><Star size={15} fill="currentColor" /></span><p>Que a sua casa se encha de luz,<br /><em>e o coração, de boas lembranças.</em></p><span className="closing-star"><Star size={15} fill="currentColor" /></span></section>
       </main>
 
-      <footer className="site-footer"><a className="footer-brand" href="#inicio"><BrandMark /><span>Estação de Natal</span></a><span className="footer-copy">A magia mora nos detalhes.</span><span className="footer-demo">Black Friday · Queima de estoque</span></footer>
+      <footer className="site-footer"><a className="footer-brand" href="#inicio"><BrandMark /><span>Estação de Natal</span></a><button className="footer-order-link" type="button" onClick={() => openOrderTracking()}>Acompanhar pedido <ArrowRight size={13} /></button><span className="footer-copy">A magia mora nos detalhes.</span><span className="footer-demo">Black Friday · Queima de estoque</span></footer>
 
       {selectedProduct && (
         <div className="product-detail-backdrop" onClick={(event) => { if (event.target === event.currentTarget) setSelectedProduct(null) }}>
@@ -355,7 +417,7 @@ function App() {
                 <div className="cart-bottom"><div className="cart-price-lines"><div className="cart-price-row"><span>Subtotal</span><strong>{formatPrice(cartTotal)}</strong></div><div className="cart-price-row"><span>Frete</span><strong>{shippingCents === 0 ? 'Grátis' : formatCents(shippingCents)}</strong></div></div><div className="cart-total-row"><span>Total</span><strong>{formatCents(orderTotalCents)}</strong></div><p className="cart-disclaimer">{shippingCents === 0 ? 'Frete grátis aplicado a partir de R$ 150,00.' : `Frete fixo de R$ 14,90. Faltam ${formatCents(FREE_SHIPPING_THRESHOLD_CENTS - toCents(cartTotal))} para o frete grátis.`} Confira o valor final antes de pagar.</p><button className="button button-dark checkout-button" disabled={!cart.length} onClick={() => setPanel('checkout')}>Continuar para pagamento <ArrowRight size={16} /></button><span className="secure-note"><Check size={13} /> O Pix é gerado ao confirmar o pedido</span></div>
               </>
             ) : (
-              <CheckoutPreview cart={cart} itemCount={itemCount} cartTotal={cartTotal} onBack={() => setPanel('cart')} onPaid={setPaidOrderTotalCents} />
+              <CheckoutPreview cart={cart} itemCount={itemCount} cartTotal={cartTotal} onBack={() => setPanel('cart')} onPaid={handlePaymentPaid} />
             )}
           </section>
         </div>

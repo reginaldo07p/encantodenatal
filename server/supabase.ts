@@ -7,22 +7,32 @@ export type OrderRecord = {
   id: string
   idempotency_key: string
   request_fingerprint: string
+  tracking_token_hash: string | null
   external_id: string
   subtotal_cents: number
   shipping_cents: number
   total_cents: number
   payment_status: PaymentStatus
+  fulfillment_status: 'received' | 'processing' | 'shipped' | 'delivered'
+  shipping_carrier: string | null
+  shipping_tracking_code: string | null
+  shipped_at: string | null
+  delivered_at: string | null
+  items: CheckoutLine[]
   bearpay_charge_id: string | null
   bearpay_status: string | null
   pix_code: string | null
   pix_expires_at: string | null
   paid_at: string | null
+  created_at: string
+  updated_at: string
 }
 
 const ORDER_FIELDS = [
-  'id', 'idempotency_key', 'request_fingerprint', 'external_id',
+  'id', 'idempotency_key', 'request_fingerprint', 'tracking_token_hash', 'external_id',
   'subtotal_cents', 'shipping_cents', 'total_cents', 'payment_status',
-  'bearpay_charge_id', 'bearpay_status', 'pix_code', 'pix_expires_at', 'paid_at',
+  'fulfillment_status', 'shipping_carrier', 'shipping_tracking_code', 'shipped_at', 'delivered_at',
+  'items', 'created_at', 'updated_at', 'bearpay_charge_id', 'bearpay_status', 'pix_code', 'pix_expires_at', 'paid_at',
 ].join(',')
 
 export class SupabaseRequestError extends Error {
@@ -72,10 +82,17 @@ export async function findOrderByExternalId(externalId: string): Promise<OrderRe
   return rows[0] ?? null
 }
 
+export async function findOrderByTrackingTokenHash(tokenHash: string): Promise<OrderRecord | null> {
+  const params = new URLSearchParams({ select: ORDER_FIELDS, tracking_token_hash: `eq.${tokenHash}`, limit: '1' })
+  const rows = await dbFetch<OrderRecord[]>(restUrl('store_orders', params))
+  return rows[0] ?? null
+}
+
 export type NewOrder = {
   id: string
   idempotency_key: string
   request_fingerprint: string
+  tracking_token_hash: string
   external_id: string
   subtotal_cents: number
   shipping_cents: number
