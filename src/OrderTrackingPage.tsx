@@ -117,10 +117,9 @@ export default function OrderTrackingPage({ initialToken, onBack }: { initialTok
             <button className="button button-dark" type="submit">Consultar <ArrowLeft className="order-code-arrow" size={15} /></button>
           </form>
           {formError && <p className="order-tracking-error" role="alert">{formError}</p>}
-          <p className="order-tracking-privacy">O código é privado: quem o tiver poderá ver os itens e o andamento básico deste pedido. Não compartilhamos nem guardamos o código neste dispositivo.</p>
         </section>
 
-        <section className="order-tracking-results" aria-label="Pedidos salvos neste dispositivo">
+        <section className="order-tracking-results" aria-label="Pedidos consultados nesta sessão">
           <div className="order-results-heading"><h2>{tokens.length ? 'Pedidos consultados nesta sessão' : 'Nenhum pedido consultado nesta sessão'}</h2>{tokens.length > 0 && <button className="order-refresh-button" type="button" onClick={() => setRefreshCount((count) => count + 1)} disabled={loading}><RefreshCw className={loading ? 'spin-icon' : ''} size={15} /> Atualizar</button>}</div>
           {!tokens.length && <p className="order-tracking-empty">Use o código da confirmação da compra para consultar seu pedido. Guarde-o em local seguro para consultar novamente mais tarde.</p>}
           {results.map(({ token, order, error }) => order ? (
@@ -134,13 +133,12 @@ export default function OrderTrackingPage({ initialToken, onBack }: { initialTok
               {(order.carrier || order.trackingCode) && <div className="tracked-shipment-info"><Truck size={16} /><div><strong>Informações de envio</strong><span>{order.carrier ?? 'Transportadora não informada'}{order.trackingCode ? ` · Código ${order.trackingCode}` : ''}</span></div></div>}
               <div className="tracked-order-items"><h4>Itens do pedido</h4>{order.items.map((item, index) => <div className="tracked-order-item" key={`${item.name}-${index}`}><span>{item.name} <small>× {item.quantity}</small></span><strong>{formatCents(item.lineTotalCents)}</strong></div>)}</div>
               <div className="tracked-order-totals"><span>Produtos <strong>{formatCents(order.subtotalCents)}</strong></span><span>Frete <strong>{order.shippingCents === 0 ? 'Grátis' : formatCents(order.shippingCents)}</strong></span><span className="tracked-total">Total <strong>{formatCents(order.totalCents)}</strong></span></div>
-              <button className="forget-order-code" type="button" onClick={() => removeCode(token)}>Remover este código deste dispositivo</button>
+              <button className="forget-order-code" type="button" onClick={() => removeCode(token)}>Remover esta consulta</button>
             </article>
           ) : (
             <article className="tracked-order-error" key={token} role="alert"><XCircle size={17} /><div><strong>Não foi possível localizar este pedido</strong><span>{error || 'Confira o código de acompanhamento.'}</span></div><button type="button" onClick={() => removeCode(token)} aria-label="Remover código inválido">Remover</button></article>
           ))}
         </section>
-        <p className="order-tracking-footnote">Por segurança, esta consulta não mostra dados de contato nem endereço. Pedidos feitos antes da ativação do código de acompanhamento não aparecem nesta área.</p>
       </main>
       <footer className="thank-you-footer">Estação de Natal <span>·</span> A magia mora nos detalhes</footer>
     </div>
