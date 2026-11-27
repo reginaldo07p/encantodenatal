@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Check, CheckCircle2, Clipboard, Clock3, LoaderCircle, QrCode, XCircle } from 'lucide-react'
 import { toDataURL } from 'qrcode'
 import type { Product } from './products'
-import { rememberTrackingToken } from './orderTracking'
 
 type CartLine = { product: Product; quantity: number }
 type CheckoutPhase = 'form' | 'sending' | 'preview' | 'pending' | 'paid' | 'expired' | 'error'
@@ -151,7 +150,6 @@ export default function CheckoutPanel({ cart, itemCount, cartTotal, onBack, onPa
       })
       const result = await response.json().catch(() => null) as CheckoutResponse | null
       if (!response.ok) throw new Error(safeErrorMessage(result))
-      if (result?.mode === 'live') rememberTrackingToken(trackingToken)
       if (typeof result?.subtotalCents === 'number'
         && typeof result.shippingCents === 'number'
         && typeof result.totalCents === 'number') {

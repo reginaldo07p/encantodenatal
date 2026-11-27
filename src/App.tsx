@@ -27,7 +27,7 @@ import { products, type CategoryId, type Product } from './products'
 import { productSpecs } from './productSpecs'
 import CheckoutPanel from './CheckoutPanel'
 import OrderTrackingPage from './OrderTrackingPage'
-import { rememberTrackingToken } from './orderTracking'
+import { clearLegacyTrackingTokens } from './orderTracking'
 
 type CartLine = { product: Product; quantity: number }
 
@@ -137,8 +137,8 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [paidOrderTotalCents, setPaidOrderTotalCents] = useState<number | null>(null)
   const [paidOrderTrackingToken, setPaidOrderTrackingToken] = useState('')
-  const [showOrderTracking, setShowOrderTracking] = useState(() => new URLSearchParams(window.location.search).has('acompanhar'))
-  const [activeTrackingToken, setActiveTrackingToken] = useState<string | null>(() => new URLSearchParams(window.location.search).get('acompanhar'))
+  const [showOrderTracking, setShowOrderTracking] = useState(false)
+  const [activeTrackingToken, setActiveTrackingToken] = useState<string | null>(null)
 
   const visibleProducts = useMemo(() => products.filter((product) => {
     const matchesCategory = activeCategory === 'all' || product.category === activeCategory
@@ -157,6 +157,10 @@ function App() {
   }, [toast])
 
   useEffect(() => {
+    clearLegacyTrackingTokens()
+  }, [])
+
+  useEffect(() => {
     if (!selectedProduct) return
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setSelectedProduct(null)
@@ -164,15 +168,6 @@ function App() {
     window.addEventListener('keydown', handleEscape)
     return () => window.removeEventListener('keydown', handleEscape)
   }, [selectedProduct])
-
-  useEffect(() => {
-    const url = new URL(window.location.href)
-    if (!url.searchParams.has('acompanhar')) return
-    const token = url.searchParams.get('acompanhar')
-    if (token) rememberTrackingToken(token)
-    url.searchParams.delete('acompanhar')
-    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
-  }, [])
 
   const handlePaymentPaid = useCallback((totalCents: number, trackingToken: string) => {
     setPaidOrderTotalCents(totalCents)

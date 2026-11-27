@@ -14,7 +14,7 @@ function json(status: number, payload: Record<string, unknown>): Response {
 
 function sameOrigin(request: Request): boolean {
   const origin = request.headers.get('origin')
-  if (!origin) return true
+  if (!origin) return false
   try {
     return new URL(origin).origin === new URL(request.url).origin
   } catch {

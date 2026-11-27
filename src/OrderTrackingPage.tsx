@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, Check, CheckCircle2, Clock3, PackageCheck, RefreshCw, Search, Truck, XCircle } from 'lucide-react'
-import { forgetTrackingToken, isTrackingToken, readTrackingTokens, rememberTrackingToken } from './orderTracking'
+import { isTrackingToken } from './orderTracking'
 
 type TrackedOrder = {
   orderCode: string
@@ -48,10 +48,8 @@ export default function OrderTrackingPage({ initialToken, onBack }: { initialTok
   const [formError, setFormError] = useState('')
 
   useEffect(() => {
-    const saved = readTrackingTokens()
     const initial = initialToken && isTrackingToken(initialToken) ? initialToken.toLowerCase() : null
-    if (initial) rememberTrackingToken(initial)
-    setTokens(initial ? [initial, ...saved.filter((token) => token.toLowerCase() !== initial)] : saved)
+    setTokens(initial ? [initial] : [])
   }, [initialToken])
 
   useEffect(() => {
@@ -88,13 +86,11 @@ export default function OrderTrackingPage({ initialToken, onBack }: { initialTok
       return
     }
     setFormError('')
-    rememberTrackingToken(token)
     setTokens((current) => [token, ...current.filter((saved) => saved.toLowerCase() !== token)].slice(0, 20))
     setManualCode('')
   }
 
   function removeCode(token: string) {
-    forgetTrackingToken(token)
     setTokens((current) => current.filter((saved) => saved !== token))
   }
 
@@ -121,12 +117,12 @@ export default function OrderTrackingPage({ initialToken, onBack }: { initialTok
             <button className="button button-dark" type="submit">Consultar <ArrowLeft className="order-code-arrow" size={15} /></button>
           </form>
           {formError && <p className="order-tracking-error" role="alert">{formError}</p>}
-          <p className="order-tracking-privacy">O código é privado: quem o tiver poderá ver os itens e o andamento básico deste pedido. Não compartilhe com desconhecidos.</p>
+          <p className="order-tracking-privacy">O código é privado: quem o tiver poderá ver os itens e o andamento básico deste pedido. Não compartilhamos nem guardamos o código neste dispositivo.</p>
         </section>
 
         <section className="order-tracking-results" aria-label="Pedidos salvos neste dispositivo">
-          <div className="order-results-heading"><h2>{tokens.length ? 'Seus pedidos' : 'Nenhum pedido salvo neste dispositivo'}</h2>{tokens.length > 0 && <button className="order-refresh-button" type="button" onClick={() => setRefreshCount((count) => count + 1)} disabled={loading}><RefreshCw className={loading ? 'spin-icon' : ''} size={15} /> Atualizar</button>}</div>
-          {!tokens.length && <p className="order-tracking-empty">Depois da compra, guarde o código que aparece na confirmação e cole-o acima para consultar seu pedido neste ou em outro dispositivo.</p>}
+          <div className="order-results-heading"><h2>{tokens.length ? 'Pedidos consultados nesta sessão' : 'Nenhum pedido consultado nesta sessão'}</h2>{tokens.length > 0 && <button className="order-refresh-button" type="button" onClick={() => setRefreshCount((count) => count + 1)} disabled={loading}><RefreshCw className={loading ? 'spin-icon' : ''} size={15} /> Atualizar</button>}</div>
+          {!tokens.length && <p className="order-tracking-empty">Use o código da confirmação da compra para consultar seu pedido. Guarde-o em local seguro para consultar novamente mais tarde.</p>}
           {results.map(({ token, order, error }) => order ? (
             <article className="tracked-order-card" key={token}>
               <div className="tracked-order-top"><div><span className="tracked-order-kicker">Pedido</span><h3>#{order.orderCode}</h3><span className="tracked-order-date">Feito em {dateTime(order.createdAt)}</span></div><span className={`order-status-pill status-${order.paymentStatus}`}><CheckCircle2 size={14} /> {paymentLabels[order.paymentStatus]}</span></div>
