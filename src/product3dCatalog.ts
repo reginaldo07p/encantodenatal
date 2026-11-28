@@ -1,7 +1,7 @@
 const supportedIds = new Set([
   'arvore-verde', 'arvore-nevada', 'mini-arvore',
   'guirlanda-pinhas', 'guirlanda-frutas', 'guirlanda-eucalipto', 'guirlanda-lacos',
-  'globo-neve',
+  'globo-neve', 'lanterna-natalina',
 ])
 
 export function supports3DPreview(productId: string): boolean {
