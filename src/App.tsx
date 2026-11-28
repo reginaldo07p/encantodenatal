@@ -1,9 +1,8 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowDown,
   ArrowRight,
-  Box,
   Check,
   CheckCircle2,
   ChevronRight,
@@ -29,9 +28,6 @@ import { productSpecs } from './productSpecs'
 import CheckoutPanel from './CheckoutPanel'
 import OrderTrackingPage from './OrderTrackingPage'
 import { clearLegacyTrackingTokens } from './orderTracking'
-import { supports3DPreview } from './product3dCatalog'
-
-const Product3DPreview = lazy(() => import('./Product3DPreview'))
 
 type CartLine = { product: Product; quantity: number }
 
@@ -139,7 +135,6 @@ function App() {
   const [panel, setPanel] = useState<'cart' | 'checkout' | null>(null)
   const [toast, setToast] = useState('')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [show3DPreview, setShow3DPreview] = useState(false)
   const [paidOrderTotalCents, setPaidOrderTotalCents] = useState<number | null>(null)
   const [paidOrderTrackingToken, setPaidOrderTrackingToken] = useState('')
   const [showOrderTracking, setShowOrderTracking] = useState(false)
@@ -195,11 +190,6 @@ function App() {
   function selectCategory(category: CategoryId) {
     setActiveCategory(category)
     document.getElementById('colecao')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  function openProductDetails(product: Product) {
-    setShow3DPreview(false)
-    setSelectedProduct(product)
   }
 
   function addToCart(product: Product) {
@@ -346,7 +336,7 @@ function App() {
               {visibleProducts.map((product, index) => (
                 <article className="product-card" key={product.id} style={{ animationDelay: `${Math.min(index, 12) * 35}ms` }}>
                   <div className={`product-visual tone-${product.tone}`}>
-                    <button className="product-photo-trigger" type="button" onClick={() => openProductDetails(product)} aria-label={`Ver detalhes de ${product.name}`}>
+                    <button className="product-photo-trigger" type="button" onClick={() => setSelectedProduct(product)} aria-label={`Ver detalhes de ${product.name}`}>
                       <ProductPhoto product={product} />
                     </button>
                     <span className="product-label">{product.categoryName}</span>
@@ -357,7 +347,7 @@ function App() {
                     <button className="quick-add" onClick={() => addToCart(product)} aria-label={`Adicionar ${product.name} à sacola`}><Plus size={19} /></button>
                   </div>
                   <div className="product-info">
-                    <div className="product-title-row"><h3><button className="product-name-trigger" type="button" onClick={() => openProductDetails(product)}>{product.name}</button></h3><span className="product-spark"><Star size={12} fill="currentColor" /></span></div>
+                    <div className="product-title-row"><h3><button className="product-name-trigger" type="button" onClick={() => setSelectedProduct(product)}>{product.name}</button></h3><span className="product-spark"><Star size={12} fill="currentColor" /></span></div>
                     <p>{product.description}</p>
                     <div className="product-price-row"><span>Preço Black Friday</span><strong>{formatPrice(product.price)}</strong></div>
                     <div className="product-footer"><span>Queima de estoque</span><button onClick={() => addToCart(product)}>Adicionar à sacola <ArrowRight size={14} /></button></div>
@@ -387,20 +377,7 @@ function App() {
         <div className="product-detail-backdrop" onClick={(event) => { if (event.target === event.currentTarget) setSelectedProduct(null) }}>
           <section className="product-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="product-detail-title">
             <button className="icon-button product-detail-close" type="button" onClick={() => setSelectedProduct(null)} aria-label="Fechar detalhes"><X size={20} /></button>
-            <div className="product-detail-visual-column">
-              <div className={`product-detail-photo tone-${selectedProduct.tone}`}>
-                {show3DPreview && supports3DPreview(selectedProduct.id)
-                  ? <Suspense fallback={<div className="product-3d-loading">Preparando a prévia 3D…</div>}><Product3DPreview productId={selectedProduct.id} productName={selectedProduct.name} /></Suspense>
-                  : <ProductPhoto product={selectedProduct} />}
-              </div>
-              {supports3DPreview(selectedProduct.id) && <>
-                <div className="product-preview-switch" role="group" aria-label="Modo de visualização do produto">
-                  <button className={!show3DPreview ? 'active' : ''} type="button" aria-pressed={!show3DPreview} onClick={() => setShow3DPreview(false)}>Foto</button>
-                  <button className={show3DPreview ? 'active' : ''} type="button" aria-pressed={show3DPreview} onClick={() => setShow3DPreview(true)}><Box size={15} /> Ver em 3D</button>
-                </div>
-                {show3DPreview && <p className="product-3d-hint">Arraste para girar · pinça ou roda para ampliar. Prévia ilustrativa.</p>}
-              </>}
-            </div>
+            <div className={`product-detail-photo tone-${selectedProduct.tone}`}><ProductPhoto product={selectedProduct} /></div>
             <div className="product-detail-copy">
               <span className="eyebrow small-eyebrow">{selectedProduct.categoryName}</span>
               <h2 id="product-detail-title">{selectedProduct.name}</h2>
